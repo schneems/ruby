@@ -1903,14 +1903,25 @@ set_method_visibility(VALUE self, int argc, const VALUE *argv, rb_method_visibil
 	return;
     }
 
+    if (argc == 1 && RB_TYPE_P(argv[0], T_ARRAY)) {
+      for(i = 0; i < RARRAY_LEN(argv[0]); i++) {
+        VALUE v = rb_ary_entry(argv[0], i);
+        ID id = rb_check_id(&v);
+        if (!id) {
+            rb_print_undef_str(self, v);
+        }
+        rb_export_method(self, id, visi);
+      }
+    } else {
     for (i = 0; i < argc; i++) {
-	VALUE v = argv[i];
-	ID id = rb_check_id(&v);
-	if (!id) {
-	    rb_print_undef_str(self, v);
-	}
-	rb_export_method(self, id, visi);
+      VALUE v = argv[i];
+      ID id = rb_check_id(&v);
+      if (!id) {
+          rb_print_undef_str(self, v);
+      }
+      rb_export_method(self, id, visi);
     }
+  }
 }
 
 static VALUE
