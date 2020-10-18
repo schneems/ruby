@@ -2269,7 +2269,7 @@ id_for_attr(VALUE obj, VALUE name)
  *  String arguments are converted to symbols.
  */
 
-static VALUE
+VALUE
 rb_mod_attr_reader(int argc, VALUE *argv, VALUE klass)
 {
     int i;
@@ -2277,7 +2277,10 @@ rb_mod_attr_reader(int argc, VALUE *argv, VALUE klass)
     for (i=0; i<argc; i++) {
 	rb_attr(klass, id_for_attr(klass, argv[i]), TRUE, FALSE, TRUE);
     }
-    return Qnil;
+
+    VALUE out;
+    out = rb_ary_new4(argc, argv);
+    return out;
 }
 
 /**
@@ -2315,15 +2318,19 @@ rb_mod_attr(int argc, VALUE *argv, VALUE klass)
  *  String arguments are converted to symbols.
  */
 
-static VALUE
+VALUE
 rb_mod_attr_writer(int argc, VALUE *argv, VALUE klass)
 {
     int i;
+    VALUE out;
+    out = rb_ary_new();
 
     for (i=0; i<argc; i++) {
-	rb_attr(klass, id_for_attr(klass, argv[i]), FALSE, TRUE, TRUE);
+        VALUE method_id_symbol = id_for_attr(klass, argv[i]);
+        rb_ary_push(out, rb_str_plus(rb_id2str(method_id_symbol), rb_str_new("=", 1)));
+        rb_attr(klass, method_id_symbol, FALSE, TRUE, TRUE);
     }
-    return Qnil;
+    return out;
 }
 
 /*
@@ -2343,15 +2350,20 @@ rb_mod_attr_writer(int argc, VALUE *argv, VALUE klass)
  *     Mod.instance_methods.sort   #=> [:one, :one=, :two, :two=]
  */
 
-static VALUE
+VALUE
 rb_mod_attr_accessor(int argc, VALUE *argv, VALUE klass)
 {
     int i;
+    VALUE out;
+    out = rb_ary_new4(argc, argv);
 
     for (i=0; i<argc; i++) {
-	rb_attr(klass, id_for_attr(klass, argv[i]), TRUE, TRUE, TRUE);
+        VALUE method_id_symbol = id_for_attr(klass, argv[i]);
+        rb_ary_push(out, rb_str_plus(rb_id2str(method_id_symbol), rb_str_new("=", 1)));
+        rb_attr(klass, method_id_symbol, TRUE, TRUE, TRUE);
     }
-    return Qnil;
+
+    return out;
 }
 
 /*

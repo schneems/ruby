@@ -12,6 +12,14 @@ class TestObject < Test::Unit::TestCase
     $VERBOSE = @verbose
   end
 
+  def test_attr_reader_return
+    c = Class.new do
+      private attr_reader :a, :b, :c
+    end
+
+    assert_equal([:a, :b, :c], c.new.private_methods)
+  end
+
   def test_itself
     feature6373 = '[ruby-core:44704] [Feature #6373]'
     object = Object.new
