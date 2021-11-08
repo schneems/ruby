@@ -74,8 +74,7 @@ class Ripper
     end
 
     class Elem
-      attr_reader :pos, :event, :tok, :state, :message
-      attr_writer :tok, :event
+      attr_accessor :pos, :event, :tok, :state, :message
 
       def initialize(pos, event, tok, state, message = nil)
         @pos = pos
