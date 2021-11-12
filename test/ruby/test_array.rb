@@ -288,19 +288,19 @@ class TestArray < Test::Unit::TestCase
   def test_subtract_bang
     a = @cls[1]
 
-    a.subtract!([1])
+    a.difference!([1])
     assert_equal(@cls[], a)
 
     a = @cls[1, 2, 3, 4, 5]
-    assert_equal(@cls[1], a.subtract!(@cls[2, 3, 4, 5]))
+    assert_equal(@cls[1], a.difference!(@cls[2, 3, 4, 5]))
     a = @cls[1, 2, 1]
-    assert_equal(@cls[1, 1],  a.subtract!(@cls[2]))
+    assert_equal(@cls[1, 1],  a.difference!(@cls[2]))
     a = @cls[1, 2, 1, 3, 1, 4, 1, 5]
-    assert_equal(@cls[1, 1, 1, 1], a.subtract!(@cls[2, 3, 4, 5]))
+    assert_equal(@cls[1, 1, 1, 1], a.difference!(@cls[2, 3, 4, 5]))
 
     a = [1]
-    assert_equal(@cls[1], a.dup.subtract!(@cls[2]))
-    assert_equal(@cls[], a.dup.subtract!(@cls[1]))
+    assert_equal(@cls[1], a.dup.difference!(@cls[2]))
+    assert_equal(@cls[], a.dup.difference!(@cls[1]))
     assert_equal(@cls[1], a)
   end
 

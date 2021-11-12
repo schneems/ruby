@@ -5300,63 +5300,55 @@ rb_ary_difference_multi(int argc, VALUE *argv, VALUE ary)
 }
 
 static VALUE
-rb_ary_subtract_bang_i(VALUE a, VALUE ary2)
+rb_ary_difference_bang_i(int argc, VALUE *argv, VALUE a)
 {
-    VALUE hash;
-    long i;
-    long length;
+
+    long i, length;
+    volatile VALUE t0;
+    bool *is_hash = ALLOCV_N(bool, t0, argc);
 
     volatile struct select_bang_arg *arg = (void *)a;
-    VALUE ary1 = arg->ary;
+    VALUE ary = arg->ary;
     length = arg->len[0];
 
-    ary2 = to_ary(ary2);
-    if (RARRAY_LEN(ary2) == 0) { return ary1; }
+    for (i = 0; i < argc; i++) {
+        argv[i] = to_ary(argv[i]);
+        is_hash[i] = (length > SMALL_ARRAY_LEN && RARRAY_LEN(argv[i]) > SMALL_ARRAY_LEN);
+        if (is_hash[i]) argv[i] = ary_make_hash(argv[i]);
+    }
 
-    if (length <= SMALL_ARRAY_LEN || RARRAY_LEN(ary2) <= SMALL_ARRAY_LEN) {
-        for (i=0; i<length; i++) {
-            VALUE elt = rb_ary_elt(ary1, i);
-            if (rb_ary_includes_by_eql(ary2, elt)) continue;
-            rb_ary_store(ary1, arg->len[1], elt);
+    for (i = 0; i < length; i++) {
+        int j;
+        VALUE elt = rb_ary_elt(ary, i);
+        for (j = 0; j < argc; j++) {
+            if (is_hash[j]) {
+                if (rb_hash_stlike_lookup(argv[j], RARRAY_AREF(ary, i), NULL))
+                    break;
+            }
+            else {
+                if (rb_ary_includes_by_eql(argv[j], elt)) break;
+            }
+        }
+        if (j == argc) {
+            rb_ary_store(ary, arg->len[1], elt);
             arg->len[1] += 1;
         }
-        return ary1;
     }
 
-    hash = ary_make_hash(ary2);
-    for (i=0; i<length; i++) {
-        VALUE aref = RARRAY_AREF(ary1, i);
-        if (rb_hash_stlike_lookup(hash, aref, NULL)) continue;
-        rb_ary_store(ary1, arg->len[1], aref);
-        arg->len[1] += 1;
-    }
-    ary_recycle_hash(hash);
-    return ary1;
+    ALLOCV_END(t0);
+
+    return ary;
 }
 
 /*
  *  call-seq:
- *    array.subtract!(other_array) -> self
+ *    array.difference!(other_array) -> self
  *
- *  Removes values from target \Array that are found in
- *  +other_array+. Items are compared using <tt>eql?</tt>;
- *    order from +self+ is preserved:
- *
- *    [0, 1, 1, 2, 1, 1, 3, 1, 1].subtract!([1]) # => [0, 2, 3]
- *    [0, 1, 2, 3].subtract!([3, 0], [1, 3]) # => [2]
- *
- *    array = [1, 2, 3]
- *    result = array.subtract!([4])
- *    array == result # => true
- *
- *  Returns a copy of +self+ if no arguments given.
- *
- *  Related: Array#-.
- *  Related: Array#difference.
+ * TODO write docs
  */
 
 static VALUE
-rb_ary_subtract_bang(VALUE ary, VALUE other)
+rb_ary_difference_bang(int argc, VALUE *argv, VALUE ary)
 {
     struct select_bang_arg args;
     rb_ary_modify_check(ary);
@@ -5364,7 +5356,9 @@ rb_ary_subtract_bang(VALUE ary, VALUE other)
     args.len[0] = RARRAY_LEN(ary);
     args.len[1] = 0;
 
-    rb_ary_subtract_bang_i((VALUE)&args, other);
+    rb_ary_difference_bang_i(argc, argv, (VALUE)&args);
+
+    // rb_ary_difference_bang_i((VALUE)&args, other);
     select_bang_ensure((VALUE)&args);
 
     return args.ary;
@@ -8406,7 +8400,7 @@ Init_Array(void)
     rb_define_method(rb_cArray, "+", rb_ary_plus, 1);
     rb_define_method(rb_cArray, "*", rb_ary_times, 1);
 
-    rb_define_method(rb_cArray, "subtract!", rb_ary_subtract_bang, 1);
+    rb_define_method(rb_cArray, "difference!", rb_ary_difference_bang, -1);
     rb_define_method(rb_cArray, "-", rb_ary_diff, 1);
     rb_define_method(rb_cArray, "&", rb_ary_and, 1);
     rb_define_method(rb_cArray, "|", rb_ary_or, 1);
