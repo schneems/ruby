@@ -17,7 +17,7 @@ jobs:
       && github.event.check_suite.head_branch == 'master'
     runs-on: ubuntu-latest
     steps:
-      - uses: octokit/request-action@4579f9e1e690974421f9f6928a30fb448e967c60 # v2.x
+      - uses: octokit/request-action@1548051f22ca99888e45e8545c3a86b1e19721e9 # v2.x
         id: get_failed_check_run
         with:
           route: GET /repos/${{ github.repository }}/check-suites/${{ github.event.check_suite.id }}/check-runs?status=completed
